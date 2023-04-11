@@ -1,0 +1,1 @@
+- Start the server with `docker run -it -p 3000:3000 dumbserver`
