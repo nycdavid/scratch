@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dumbserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dumbserver
+  template:
+    metadata:
+      labels:
+        app: dumbserver
+    spec:
+      containers:
+        - name: dumbserver-container
+          image: nycdavid/dumbserver:latest
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: dumbserver
+  ports:
+  - port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dumbserver-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-service
+                port:
+                  number: 3000
