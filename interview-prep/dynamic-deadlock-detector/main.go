@@ -1,6 +1,7 @@
 package main
 
 import (
+	"slices"
 	"strconv"
 )
 
@@ -33,8 +34,13 @@ func (d *Detector) Process(e *Event) ([]string, bool) {
 
 		if resUser != "" {
 			resUserNum := threadInt(resUser)
-			// resource is unavailable, wait on user
+			// resource is unavailable
 			d.graph[tnum] = append(d.graph[tnum], resUserNum)
+			// - check if user is already waiting on requester
+			if slices.Contains(d.graph[resUserNum], tnum) {
+				// cycle detected
+				return []string{resUser, e.Thread}, true
+			}
 		}
 	} else if e.Kind == "release" {
 		if resUser == "" {

@@ -39,7 +39,7 @@ func Test_Process(t *testing.T) {
 			outResourceIdx:   map[string]string{"gpu0": "T21"},
 		},
 		{
-			name: "acquire event - requested GPU is in use",
+			name: "acquire event - requested GPU is in use - no deadlock",
 
 			event: &Event{
 				Kind:     "acquire",
@@ -60,6 +60,35 @@ func Test_Process(t *testing.T) {
 				return g
 			},
 			outResourceIdx: map[string]string{"gpu0": "T99"},
+		},
+		{
+			name: "acquire event - requested GPU is in use - DEADLOCK",
+
+			event: &Event{
+				Kind:     "acquire",
+				Thread:   "T99",
+				Resource: "gpu1",
+			},
+
+			inGraph: func() [][]int {
+				g := make([][]int, 100)
+				g[21] = []int{99}
+				return g
+			},
+			inResourceIdx: map[string]string{
+				"gpu0": "T99",
+				"gpu1": "T21",
+			},
+
+			expectedCycle:    []string{"T21", "T99"},
+			expectedDeadlock: true,
+			outGraph: func() [][]int {
+				g := make([][]int, 100)
+				g[21] = []int{99}
+				g[99] = []int{21}
+				return g
+			},
+			outResourceIdx: map[string]string{"gpu0": "T99", "gpu1": "T21"},
 		},
 	}
 
